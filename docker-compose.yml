@@ -1,0 +1,33 @@
+version: "3.9"
+
+services:
+  edumind-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: edumind-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY}
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  edumind-frontend:
+    image: python:3.11-slim
+    container_name: edumind-frontend
+    working_dir: /app
+    command: python -m http.server 8501
+    volumes:
+      - ./frontend:/app
+    ports:
+      - "8501:8501"
+    depends_on:
+      - edumind-backend
+    restart: unless-stopped

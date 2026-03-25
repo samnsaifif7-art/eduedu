@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EduMind AI 🎓</title>
+  <style>
+    :root {
+      --primary: #6c63ff;
+      --primary-dark: #574fd6;
+      --secondary: #43e97b;
+      --accent: #f7971e;
+      --danger: #e74c3c;
+      --bg: #0f0f1a;
+      --surface: #1a1a2e;
+      --surface2: #16213e;
+      --border: #2a2a4a;
+      --text: #e8e8f0;
+      --text-muted: #888aaa;
+      --radius: 12px;
+      --shadow: 0 4px 24px rgba(108,99,255,0.15);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 40px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(10px);
+    }
+    header .logo { font-size: 2rem; }
+    header h1 { font-size: 1.6rem; font-weight: 700; color: var(--text); }
+    header h1 span { color: var(--primary); }
+    header p { font-size: 0.85rem; color: var(--text-muted); margin-top: 2px; }
+    .api-status {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #555;
+      transition: background 0.3s;
+    }
+    .status-dot.online { background: var(--secondary); box-shadow: 0 0 6px var(--secondary); }
+    .status-dot.offline { background: var(--danger); }
+
+    /* ── Layout ── */
+    .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--surface);
+      padding: 6px;
+      border-radius: var(--radius);
+      margin-bottom: 32px;
+      border: 1px solid var(--border);
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .tab-btn:hover { background: var(--surface2); color: var(--text); }
+    .tab-btn.active {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 2px 12px rgba(108,99,255,0.4);
+    }
+
+    /* ── Panels ── */
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+    }
+    .card h2 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .card h2 .icon { font-size: 1.4rem; }
+
+    /* ── Forms ── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full { grid-column: 1 / -1; }
+
+    label {
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    input, select, textarea {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 10px 14px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      transition: border-color 0.2s;
+      width: 100%;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(108,99,255,0.15);
+    }
+    textarea { resize: vertical; min-height: 80px; }
+
+    /* ── Buttons ── */
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 2px 12px rgba(108,99,255,0.3);
+    }
+    .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn-secondary {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { border-color: var(--primary); color: var(--primary); }
+
+    /* ── Upload zone ── */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 40px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 16px;
+    }
+    .upload-zone:hover, .upload-zone.drag-over {
+      border-color: var(--primary);
+      background: rgba(108,99,255,0.05);
+    }
+    .upload-zone .upload-icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .upload-zone p { color: var(--text-muted); font-size: 0.9rem; }
+    .upload-zone p strong { color: var(--text); }
+
+    /* ── Chat ── */
+    .chat-box {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      min-height: 200px;
+      max-height: 420px;
+      overflow-y: auto;
+      margin-bottom: 16px;
+    }
+    .chat-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 160px;
+      color: var(--text-muted);
+      gap: 8px;
+    }
+    .msg {
+      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .msg.user { align-items: flex-end; }
+    .msg.bot  { align-items: flex-start; }
+    .msg-bubble {
+      max-width: 80%;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+    .msg.user .msg-bubble { background: var(--primary); color: #fff; border-bottom-right-radius: 4px; }
+    .msg.bot  .msg-bubble { background: var(--surface); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+    .msg-meta { font-size: 0.75rem; color: var(--text-muted); padding: 0 4px; }
+    .chat-input-row { display: flex; gap: 10px; }
+    .chat-input-row input { flex: 1; }
+
+    /* ── Result cards ── */
+    .result-box {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-top: 20px;
+      display: none;
+    }
+    .result-box.show { display: block; }
+
+    .grade-badge {
+      display: inline-block;
+      padding: 6px 20px;
+      border-radius: 20px;
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-right: 12px;
+    }
+    .grade-A  { background: rgba(67,233,123,0.15); color: #43e97b; border: 1px solid #43e97b44; }
+    .grade-B  { background: rgba(108,99,255,0.15); color: #6c63ff; border: 1px solid #6c63ff44; }
+    .grade-C  { background: rgba(247,151,30,0.15);  color: #f7971e; border: 1px solid #f7971e44; }
+    .grade-D  { background: rgba(231,76,60,0.15);   color: #e74c3c; border: 1px solid #e74c3c44; }
+    .grade-F  { background: rgba(231,76,60,0.25);   color: #e74c3c; border: 1px solid #e74c3c; }
+
+    .risk-badge {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .risk-Low    { background: rgba(67,233,123,0.15); color: #43e97b; }
+    .risk-Medium { background: rgba(247,151,30,0.15);  color: #f7971e; }
+    .risk-High   { background: rgba(231,76,60,0.15);   color: #e74c3c; }
+
+    .rec-list { list-style: none; margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+    .rec-list li {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.88rem;
+      line-height: 1.4;
+    }
+
+    .importance-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .importance-bar span:first-child { width: 200px; font-size: 0.82rem; color: var(--text-muted); flex-shrink: 0; }
+    .bar-track { flex: 1; background: var(--border); border-radius: 4px; height: 8px; }
+    .bar-fill { height: 8px; border-radius: 4px; background: var(--primary); transition: width 0.6s; }
+    .importance-bar span:last-child { font-size: 0.8rem; color: var(--text-muted); width: 40px; text-align: right; }
+
+    /* ── Topic cards ── */
+    .topics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+    .topic-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .topic-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+    .topic-card .topic-name { font-weight: 600; font-size: 0.95rem; margin-bottom: 4px; }
+    .topic-card .topic-meta { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 8px; }
+    .topic-card .topic-desc { font-size: 0.82rem; color: var(--text-muted); line-height: 1.4; }
+    .diff-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      margin-left: 6px;
+    }
+    .diff-Easy   { background: rgba(67,233,123,0.15); color: #43e97b; }
+    .diff-Medium { background: rgba(247,151,30,0.15);  color: #f7971e; }
+    .diff-Hard   { background: rgba(231,76,60,0.15);   color: #e74c3c; }
+
+    .study-plan-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .day-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+    }
+    .day-card .day-name { font-weight: 600; font-size: 0.85rem; margin-bottom: 8px; color: var(--primary); }
+    .day-card ul { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+    .day-card li { font-size: 0.78rem; color: var(--text-muted); }
+
+    /* ── Loader ── */
+    .loader {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-top: 16px;
+    }
+    .loader.show { display: flex; }
+    .spinner {
+      width: 20px; height: 20px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Alerts ── */
+    .alert {
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      margin-top: 12px;
+      display: none;
+    }
+    .alert.show { display: block; }
+    .alert-success { background: rgba(67,233,123,0.1); border: 1px solid #43e97b44; color: #43e97b; }
+    .alert-error   { background: rgba(231,76,60,0.1);  border: 1px solid #e74c3c44; color: #e74c3c; }
+
+    h3 { font-size: 1rem; font-weight: 600; margin: 20px 0 10px; color: var(--text); }
+    .motivational {
+      background: linear-gradient(135deg, rgba(108,99,255,0.1), rgba(67,233,123,0.05));
+      border: 1px solid rgba(108,99,255,0.3);
+      border-radius: 10px;
+      padding: 16px 20px;
+      font-size: 1rem;
+      font-style: italic;
+      color: var(--text);
+      margin-bottom: 20px;
+    }
+
+    /* ── Score display ── */
+    .score-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .score-number {
+      font-size: 3rem;
+      font-weight: 800;
+      color: var(--primary);
+      line-height: 1;
+    }
+    .score-label { font-size: 0.8rem; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🎓</div>
+  <div>
+    <h1>Edu<span>Mind</span> AI</h1>
+    <p>Intelligent School Learning Platform</p>
+  </div>
+  <div class="api-status">
+    <div class="status-dot" id="statusDot"></div>
+    <span id="statusText">Connecting…</span>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('rag')">💬 EduBot Q&A</button>
+    <button class="tab-btn" onclick="switchTab('predict')">📊 Performance Predictor</button>
+    <button class="tab-btn" onclick="switchTab('recommend')">🗺️ Topic Recommender</button>
+  </div>
+
+  <!-- ═══════════════════════════ RAG PANEL ═══════════════════════════ -->
+  <div id="panel-rag" class="panel active">
+
+    <div class="card">
+      <h2><span class="icon">📄</span> Upload Study Material</h2>
+      <div class="upload-zone" id="uploadZone" onclick="document.getElementById('pdfInput').click()"
+           ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+        <div class="upload-icon">📂</div>
+        <p><strong>Click to upload</strong> or drag & drop your PDF here</p>
+        <p>NCERT textbooks, notes, question papers — any educational PDF</p>
+      </div>
+      <input type="file" id="pdfInput" accept=".pdf" style="display:none" onchange="uploadPDF(this.files[0])">
+      <div class="loader" id="uploadLoader"><div class="spinner"></div> Indexing PDF…</div>
+      <div class="alert" id="uploadAlert"></div>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon">💬</span> Ask EduBot</h2>
+      <div class="chat-box" id="chatBox">
+        <div class="chat-placeholder" id="chatPlaceholder">
+          <span style="font-size:2rem">🤖</span>
+          <p>Upload a PDF above, then ask me anything!</p>
+        </div>
+      </div>
+      <div class="chat-input-row">
+        <input type="text" id="questionInput" placeholder="e.g. What is photosynthesis?" onkeydown="if(event.key==='Enter') askQuestion()">
+        <button class="btn btn-primary" onclick="askQuestion()" id="askBtn">
+          <span>Ask</span> ➤
+        </button>
+      </div>
+      <div class="loader" id="askLoader"><div class="spinner"></div> Thinking…</div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════ PREDICT PANEL ═══════════════════════ -->
+  <div id="panel-predict" class="panel">
+
+    <div class="card">
+      <h2><span class="icon">📊</span> Student Performance Predictor</h2>
+      <p style="color:var(--text-muted);font-size:0.88rem;margin-bottom:20px">
+        Enter your study details to predict your grade and get personalised recommendations.
+      </p>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Attendance (%)</label>
+          <input type="number" id="attendance" min="0" max="100" value="85" placeholder="85">
+        </div>
+        <div class="form-group">
+          <label>Study Hours / Day</label>
+          <input type="number" id="studyHours" min="0" max="24" step="0.5" value="3.5" placeholder="3.5">
+        </div>
+        <div class="form-group">
+          <label>Previous Exam Score</label>
+          <input type="number" id="prevScore" min="0" max="100" value="72" placeholder="72">
+        </div>
+        <div class="form-group">
+          <label>Assignments Completed (%)</label>
+          <input type="number" id="assignments" min="0" max="100" value="80" placeholder="80">
+        </div>
+        <div class="form-group">
+          <label>Sleep Hours / Night</label>
+          <input type="number" id="sleepHours" min="0" max="24" step="0.5" value="7" placeholder="7">
+        </div>
+        <div class="form-group">
+          <label>Extracurricular Activities</label>
+          <input type="number" id="extra" min="0" max="10" value="2" placeholder="2">
+        </div>
+        <div class="form-group">
+          <label>Subject</label>
+          <select id="subject">
+            <option>Math</option><option>Science</option>
+            <option>English</option><option>Social Science</option>
+            <option>Hindi</option><option>General</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-top:20px">
+        <button class="btn btn-primary" onclick="predictPerformance()" id="predictBtn">
+          🔮 Predict Performance
+        </button>
+      </div>
+      <div class="loader" id="predictLoader"><div class="spinner"></div> Analysing…</div>
+      <div class="alert" id="predictAlert"></div>
+    </div>
+
+    <div class="result-box" id="predictResult">
+      <h3>📈 Prediction Results</h3>
+      <div class="score-row">
+        <div>
+          <div class="score-label">PREDICTED GRADE</div>
+          <span class="grade-badge" id="gradeDisplay">—</span>
+        </div>
+        <div>
+          <div class="score-label">ESTIMATED SCORE</div>
+          <div class="score-number" id="scoreDisplay">—</div>
+        </div>
+        <div>
+          <div class="score-label">RISK LEVEL</div>
+          <span class="risk-badge" id="riskDisplay">—</span>
+        </div>
+      </div>
+
+      <h3>💡 Recommendations</h3>
+      <ul class="rec-list" id="recList"></ul>
+
+      <h3>📌 Feature Importance</h3>
+      <div id="importanceChart"></div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════ RECOMMEND PANEL ══════════════════════ -->
+  <div id="panel-recommend" class="panel">
+
+    <div class="card">
+      <h2><span class="icon">🗺️</span> Adaptive Topic Recommender</h2>
+      <p style="color:var(--text-muted);font-size:0.88rem;margin-bottom:20px">
+        Tell us about your learning profile and we'll build a personalised 7-day study plan.
+      </p>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Student ID</label>
+          <input type="text" id="studentId" value="STU001" placeholder="STU001">
+        </div>
+        <div class="form-group">
+          <label>Grade Level</label>
+          <select id="gradeLevel">
+            <option value="6">Grade 6</option>
+            <option value="7">Grade 7</option>
+            <option value="8">Grade 8</option>
+            <option value="9" selected>Grade 9</option>
+            <option value="10">Grade 10</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Weak Subjects (comma-separated)</label>
+          <input type="text" id="weakSubjects" value="Math" placeholder="Math, Science">
+        </div>
+        <div class="form-group">
+          <label>Completed Topics (comma-separated)</label>
+          <input type="text" id="completedTopics" value="Integers, Fractions" placeholder="Integers, Fractions">
+        </div>
+        <div class="form-group">
+          <label>Learning Style</label>
+          <select id="learningStyle">
+            <option value="visual">Visual</option>
+            <option value="auditory">Auditory</option>
+            <option value="reading">Reading / Writing</option>
+            <option value="kinesthetic">Kinesthetic</option>
+            <option value="mixed" selected>Mixed</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-top:20px">
+        <button class="btn btn-primary" onclick="getRecommendations()" id="recBtn">
+          🗺️ Generate Study Plan
+        </button>
+      </div>
+      <div class="loader" id="recLoader"><div class="spinner"></div> Building your plan…</div>
+      <div class="alert" id="recAlert"></div>
+    </div>
+
+    <div class="result-box" id="recResult">
+      <div class="motivational" id="motivationalMsg"></div>
+
+      <h3>📚 Recommended Topics</h3>
+      <div class="topics-grid" id="topicsGrid"></div>
+
+      <h3>📅 Your 7-Day Study Plan</h3>
+      <div class="study-plan-grid" id="studyPlanGrid"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+  const API = 'http://localhost:8000';
+
+  // ── Status check ──────────────────────────────────────────────────────────
+  async function checkStatus() {
+    try {
+      const r = await fetch(`${API}/health`, { signal: AbortSignal.timeout(3000) });
+      if (r.ok) {
+        document.getElementById('statusDot').className = 'status-dot online';
+        document.getElementById('statusText').textContent = 'API Online';
+      } else { throw new Error(); }
+    } catch {
+      document.getElementById('statusDot').className = 'status-dot offline';
+      document.getElementById('statusText').textContent = 'API Offline';
+    }
+  }
+  checkStatus();
+  setInterval(checkStatus, 10000);
+
+  // ── Tab switching ─────────────────────────────────────────────────────────
+  function switchTab(name) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`panel-${name}`).classList.add('active');
+    event.target.closest('.tab-btn').classList.add('active');
+  }
+
+  // ── Drag & drop ───────────────────────────────────────────────────────────
+  function onDragOver(e) { e.preventDefault(); document.getElementById('uploadZone').classList.add('drag-over'); }
+  function onDragLeave()  { document.getElementById('uploadZone').classList.remove('drag-over'); }
+  function onDrop(e) {
+    e.preventDefault();
+    onDragLeave();
+    const file = e.dataTransfer.files[0];
+    if (file) uploadPDF(file);
+  }
+
+  // ── Upload PDF ────────────────────────────────────────────────────────────
+  async function uploadPDF(file) {
+    if (!file || !file.name.endsWith('.pdf')) {
+      showAlert('uploadAlert', 'Please select a valid PDF file.', false);
+      return;
+    }
+    const loader = document.getElementById('uploadLoader');
+    const alert  = document.getElementById('uploadAlert');
+    loader.classList.add('show');
+    alert.classList.remove('show');
+
+    const fd = new FormData();
+    fd.append('file', file);
+
+    try {
+      const r = await fetch(`${API}/api/rag/ingest`, { method: 'POST', body: fd });
+      const data = await r.json();
+      if (r.ok) {
+        showAlert('uploadAlert', `✅ "${data.filename}" indexed — ${data.chunks_indexed} chunks ready!`, true);
+        document.getElementById('chatPlaceholder').style.display = 'none';
+      } else {
+        showAlert('uploadAlert', `❌ ${data.detail || 'Upload failed.'}`, false);
+      }
+    } catch (e) {
+      showAlert('uploadAlert', '❌ Could not reach API. Is the backend running?', false);
+    } finally {
+      loader.classList.remove('show');
+    }
+  }
+
+  // ── Ask question ──────────────────────────────────────────────────────────
+  async function askQuestion() {
+    const q = document.getElementById('questionInput').value.trim();
+    if (!q) return;
+
+    addMessage('user', q);
+    document.getElementById('questionInput').value = '';
+    document.getElementById('askLoader').classList.add('show');
+
+    try {
+      const r = await fetch(`${API}/api/rag/ask`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: q, top_k: 3 }),
+      });
+      const data = await r.json();
+      if (r.ok) {
+        const meta = `Model: ${data.model_used} · Confidence: ${(data.confidence * 100).toFixed(0)}% · ${data.response_time_ms}ms`;
+        addMessage('bot', data.answer, meta);
+      } else {
+        addMessage('bot', `⚠️ ${data.detail || 'Something went wrong.'}`);
+      }
+    } catch {
+      addMessage('bot', '⚠️ Cannot reach API. Make sure the backend is running on port 8000.');
+    } finally {
+      document.getElementById('askLoader').classList.remove('show');
+    }
+  }
+
+  function addMessage(role, text, meta) {
+    const box = document.getElementById('chatBox');
+    const div = document.createElement('div');
+    div.className = `msg ${role}`;
+    div.innerHTML = `
+      <div class="msg-bubble">${escapeHtml(text)}</div>
+      ${meta ? `<div class="msg-meta">${escapeHtml(meta)}</div>` : ''}
+    `;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ── Performance prediction ────────────────────────────────────────────────
+  async function predictPerformance() {
+    const btn = document.getElementById('predictBtn');
+    const loader = document.getElementById('predictLoader');
+    btn.disabled = true;
+    loader.classList.add('show');
+    document.getElementById('predictAlert').classList.remove('show');
+
+    const payload = {
+      attendance_pct:              parseFloat(document.getElementById('attendance').value),
+      study_hours_per_day:         parseFloat(document.getElementById('studyHours').value),
+      prev_exam_score:             parseFloat(document.getElementById('prevScore').value),
+      assignments_completed_pct:   parseFloat(document.getElementById('assignments').value),
+      sleep_hours:                 parseFloat(document.getElementById('sleepHours').value),
+      extracurricular_activities:  parseInt(document.getElementById('extra').value),
+      subject:                     document.getElementById('subject').value,
+    };
+
+    try {
+      const r = await fetch(`${API}/api/predict/performance`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await r.json();
+      if (r.ok) {
+        renderPredictResult(data);
+      } else {
+        showAlert('predictAlert', `❌ ${data.detail || 'Prediction failed.'}`, false);
+      }
+    } catch {
+      showAlert('predictAlert', '❌ Cannot reach API.', false);
+    } finally {
+      btn.disabled = false;
+      loader.classList.remove('show');
+    }
+  }
+
+  function renderPredictResult(data) {
+    const box = document.getElementById('predictResult');
+    box.classList.add('show');
+
+    const grade = data.predicted_grade;
+    const gradeClass = grade.startsWith('A') ? 'grade-A' : grade.startsWith('B') ? 'grade-B' : grade === 'C' ? 'grade-C' : grade === 'D' ? 'grade-D' : 'grade-F';
+    document.getElementById('gradeDisplay').textContent = grade;
+    document.getElementById('gradeDisplay').className = `grade-badge ${gradeClass}`;
+    document.getElementById('scoreDisplay').textContent = data.predicted_score.toFixed(1);
+
+    const riskEl = document.getElementById('riskDisplay');
+    riskEl.textContent = data.risk_level;
+    riskEl.className = `risk-badge risk-${data.risk_level}`;
+
+    const recList = document.getElementById('recList');
+    recList.innerHTML = data.recommendations.map(r => `<li>${escapeHtml(r)}</li>`).join('');
+
+    const chart = document.getElementById('importanceChart');
+    const maxVal = Math.max(...Object.values(data.feature_importance));
+    chart.innerHTML = Object.entries(data.feature_importance)
+      .sort((a, b) => b[1] - a[1])
+      .map(([name, val]) => `
+        <div class="importance-bar">
+          <span>${name.replace(/_/g,' ')}</span>
+          <div class="bar-track"><div class="bar-fill" style="width:${(val/maxVal*100).toFixed(0)}%"></div></div>
+          <span>${(val*100).toFixed(1)}%</span>
+        </div>`).join('');
+
+    box.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  // ── Topic recommendations ─────────────────────────────────────────────────
+  async function getRecommendations() {
+    const btn = document.getElementById('recBtn');
+    const loader = document.getElementById('recLoader');
+    btn.disabled = true;
+    loader.classList.add('show');
+    document.getElementById('recAlert').classList.remove('show');
+
+    const weakSubjects    = document.getElementById('weakSubjects').value.split(',').map(s=>s.trim()).filter(Boolean);
+    const completedTopics = document.getElementById('completedTopics').value.split(',').map(s=>s.trim()).filter(Boolean);
+
+    const payload = {
+      student_id:        document.getElementById('studentId').value.trim() || 'STU001',
+      grade_level:       parseInt(document.getElementById('gradeLevel').value),
+      weak_subjects:     weakSubjects,
+      completed_topics:  completedTopics,
+      learning_style:    document.getElementById('learningStyle').value,
+    };
+
+    try {
+      const r = await fetch(`${API}/api/recommend/topics`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await r.json();
+      if (r.ok) {
+        renderRecommendations(data);
+      } else {
+        showAlert('recAlert', `❌ ${data.detail || 'Failed to get recommendations.'}`, false);
+      }
+    } catch {
+      showAlert('recAlert', '❌ Cannot reach API.', false);
+    } finally {
+      btn.disabled = false;
+      loader.classList.remove('show');
+    }
+  }
+
+  function renderRecommendations(data) {
+    const box = document.getElementById('recResult');
+    box.classList.add('show');
+
+    document.getElementById('motivationalMsg').textContent = `"${data.motivational_message}"`;
+
+    const grid = document.getElementById('topicsGrid');
+    grid.innerHTML = data.recommended_topics.slice(0, 12).map(t => `
+      <div class="topic-card">
+        <div class="topic-name">
+          ${escapeHtml(t.topic)}
+          <span class="diff-badge diff-${t.difficulty}">${t.difficulty}</span>
+        </div>
+        <div class="topic-meta">${escapeHtml(t.subject)} · Grade ${t.grade} · Score: ${t.similarity_score.toFixed(2)}</div>
+        <div class="topic-desc">${escapeHtml(t.description)}</div>
+      </div>`).join('');
+
+    const planGrid = document.getElementById('studyPlanGrid');
+    planGrid.innerHTML = Object.entries(data.daily_study_plan).map(([day, topics]) => `
+      <div class="day-card">
+        <div class="day-name">${day}</div>
+        <ul>${topics.map(t => `<li>📖 ${escapeHtml(t)}</li>`).join('')}</ul>
+      </div>`).join('');
+
+    box.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  function showAlert(id, msg, success) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.className = `alert show ${success ? 'alert-success' : 'alert-error'}`;
+  }
+</script>
+</body>
+</html>
